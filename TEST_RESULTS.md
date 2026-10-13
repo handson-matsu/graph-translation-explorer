@@ -22,3 +22,22 @@
 | JavaScriptエラー | ブラウザエラーログなし |
 
 iPad Safari・PC Chromeの実機と実際のタッチ入力は未検証です。公開・コミット・pushは行っていません。
+
+## GASアクセスカウンター追加後の確認
+
+`correlation-quest/app.js` と `blokus-puzzle/app.js` を読み取り、同一のGAS URLとGET送信設定を確認。参照先リポジトリ・GAS本体は変更していません。
+
+`tests/access-counter.html` によるブラウザテストのみで確認しました。教材のapp.js実行前にfetchをモックへ置き換え、iframeのCSP `connect-src 'none'` でも外部送信を遮断しています。GASへの実送信は行っていません。
+
+- ロード時のモック呼び出しは1回。URLは参照2教材のGASエンドポイントと一致。クエリは `app=graph-translation-explorer` のみ。
+- オプションは GET、no-cors、no-store、credentials: omit、keepalive: true。
+- 一次関数へ切り替え、a=2・b=1、p=−2・q=3、x=1行選択、0.5刻み、表示範囲変更、移動開始点変更、アニメーション、比較復帰、リセット後も1回のまま。
+- 上記条件の数表・比較座標は (1,3) と (1,10)。範囲−2〜3・0.5刻みで11行。リセット後は初期5行。
+- 再読み込み後にも、そのページロードで1回だけ呼び出されることを確認。
+- 成功、Promise拒否、同期例外、未解決Promiseの4モック条件で初期表示が動作。失敗時の未処理例外・Promise拒否なし、再送なし。
+- Promise拒否後、一次関数・p=0・q=−2・x=0で(0,0)と(0,−2)を比較可能。
+- 同期例外後、二次関数・p=−2・q=1・x=0で(0,0)と(0,5)を比較可能。
+- 未解決Promiseでも移動アニメーションが進み、(1,1)から(3,1)の終点に到達。SVG終点 cx=462.5、cy=205 を確認。
+- ブラウザのJavaScriptエラーログなし。Node.jsの `--check app.js` も通過。
+
+GAS側への着信・記録は、実送信を行わない指定により未検証です。コミット・pushなし。

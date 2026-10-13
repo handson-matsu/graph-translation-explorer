@@ -53,3 +53,16 @@ $('animate').onclick=()=>{
  frame=requestAnimationFrame(tick);
 };
 render();
+
+// Record this page load once; learning interactions never call the counter.
+try {
+ fetch('https://script.google.com/macros/s/AKfycbxssCIHsD-N97SHxNC_GN0ihYeC0qy-lb-EY0KmSs6Gnztaph1sITMerLVEnNWOGkYc/exec?app=graph-translation-explorer', {
+  method: 'GET',
+  mode: 'no-cors',
+  cache: 'no-store',
+  credentials: 'omit',
+  keepalive: true,
+ }).catch(() => {});
+} catch (_) {
+ // A blocked or unavailable fetch must not interrupt the app either.
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>アクセスカウンターのモックテスト</title>
+<style>body{font-family:sans-serif;margin:12px}iframe{width:100%;height:1100px;border:1px solid #ddd}pre{white-space:pre-wrap;font-size:13px}</style>
+<h1>GASへ送信しないモックテスト</h1>
+<p>URL末尾の #reject / #throw / #pending で失敗・同期例外・応答待ちを確認。指定なしは成功。</p>
+<pre id="results">読み込み中</pre><iframe title="モック環境の教材" id="app"></iframe>
+<script>
+const calls=[];
+const failures=[];
+function show(){document.getElementById('results').textContent=JSON.stringify({mode:location.hash.slice(1)||'success',calls,failures},null,2);}
+function record(url,options){calls.push({url:String(url),options});show();}
+fetch('../index.html').then(r=>r.text()).then(html=>{
+ const base=new URL('../',location.href).href;
+ const mock=`<script>
+ window.fetch=(url,options)=>{
+  parent.record(url,options);
+  const mode=parent.location.hash;
+  if(mode==='#throw')throw new Error('mock synchronous failure');
+  if(mode==='#reject')return Promise.reject(new Error('mock network failure'));
+  if(mode==='#pending')return new Promise(()=>{});
+  return Promise.resolve({type:'opaque'});
+ };
+ window.addEventListener('error',e=>{parent.failures.push(e.message);parent.show();});
+ window.addEventListener('unhandledrejection',e=>{parent.failures.push(String(e.reason));parent.show();});
+ <\/script>`;
+ // The mock is installed before app.js; CSP additionally blocks all connections.
+ html=html.replace('<head>','<head><base href="'+base+'"><meta http-equiv="Content-Security-Policy" content="connect-src \'none\'">');
+ html=html.replace('<script src="app.js"></'+'script>',mock+'<script src="app.js"></'+'script>');
+ document.getElementById('app').srcdoc=html;show();
+}).catch(e=>{failures.push(String(e));show();});
+</script></html>
